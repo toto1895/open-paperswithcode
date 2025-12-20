@@ -189,9 +189,8 @@ def filter_data(df: pd.DataFrame, search: str, language: str, sort_by: str, date
     return filtered.reset_index(drop=True)
 
 
-# ---------- Theme Toggle ----------
-if "theme" not in st.session_state:
-    st.session_state.theme = "light"
+# ---------- Theme (forced to light) ----------
+st.session_state.theme = "light"
 
 
 def get_theme_styles():
@@ -319,21 +318,107 @@ st.markdown(f"""
     margin: 0;
 }}
 
-/* Mobile responsive styles */
-@media (max-width: 768px) {{
+/* Large desktop (1440px+) */
+@media (min-width: 1440px) {{
+    .header-container {{
+        padding: 0.8rem 2rem;
+    }}
+    
+    .header-title {{
+        font-size: 1.8rem;
+    }}
+    
+    .header-subtitle {{
+        font-size: 0.9rem;
+    }}
+    
+    .card {{
+        padding: 1.5rem 1.6rem;
+    }}
+    
+    .card-title {{
+        font-size: 1.25rem;
+    }}
+    
+    .card-abstract {{
+        font-size: 0.9rem;
+    }}
+}}
+
+/* Desktop (1200px - 1439px) */
+@media (max-width: 1439px) and (min-width: 1200px) {{
+    .header-title {{
+        font-size: 1.6rem;
+    }}
+}}
+
+/* Small desktop / Large tablet (992px - 1199px) */
+@media (max-width: 1199px) and (min-width: 992px) {{
+    .header-container {{
+        padding: 0.6rem 1.2rem;
+    }}
+    
+    .header-title {{
+        font-size: 1.5rem;
+    }}
+    
+    .card {{
+        padding: 1.1rem 1.2rem;
+    }}
+    
+    .card-title {{
+        font-size: 1.1rem;
+    }}
+}}
+
+/* Tablet landscape (768px - 991px) */
+@media (max-width: 991px) and (min-width: 768px) {{
+    .header-container {{
+        padding: 0.6rem 1rem;
+        gap: 0.8rem;
+    }}
+    
+    .header-title {{
+        font-size: 1.4rem;
+    }}
+    
+    .header-subtitle {{
+        font-size: 0.8rem;
+    }}
+    
+    .card {{
+        padding: 1rem 1.1rem;
+        min-height: 300px;
+    }}
+    
+    .card-title {{
+        font-size: 1.05rem;
+    }}
+    
+    .card-abstract {{
+        font-size: 0.82rem;
+    }}
+    
+    .stat {{
+        font-size: 0.7rem;
+    }}
+}}
+
+/* Tablet portrait (600px - 767px) */
+@media (max-width: 767px) and (min-width: 600px) {{
     .header-container {{
         flex-direction: column;
         align-items: flex-start;
-        padding: 0.8rem 1rem;
+        padding: 0.7rem 1rem;
         gap: 0.3rem;
     }}
     
     .header-title {{
-        font-size: 1.1rem;
+        font-size: 1.3rem;
     }}
     
     .header-subtitle {{
-        font-size: 0.75rem;
+        font-size: 0.78rem;
     }}
     
     .card {{
@@ -348,8 +433,7 @@ st.markdown(f"""
     }}
     
     .card-stats {{
-        gap: 0.5rem;
-        flex-wrap: wrap;
+        gap: 0.6rem;
     }}
     
     .stat {{
@@ -358,15 +442,65 @@ st.markdown(f"""
     
     .card-abstract {{
         font-size: 0.8rem;
+        -webkit-line-clamp: 4;
+    }}
+    
+    .card-meta {{
+        font-size: 0.72rem;
+    }}
+    
+    .badge {{
+        font-size: 0.62rem;
+    }}
+}}
+
+/* Large phone (480px - 599px) */
+@media (max-width: 599px) and (min-width: 480px) {{
+    .header-container {{
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.6rem 0.9rem;
+        gap: 0.25rem;
+    }}
+    
+    .header-title {{
+        font-size: 1.2rem;
+    }}
+    
+    .header-subtitle {{
+        font-size: 0.72rem;
+    }}
+    
+    .card {{
+        padding: 0.9rem;
+        min-height: auto;
+    }}
+    
+    .card-title {{
+        font-size: 0.95rem;
+        -webkit-line-clamp: 3;
+    }}
+    
+    .card-stats {{
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }}
+    
+    .stat {{
+        font-size: 0.65rem;
+    }}
+    
+    .card-abstract {{
+        font-size: 0.78rem;
         -webkit-line-clamp: 3;
     }}
     
     .card-meta {{
-        font-size: 0.7rem;
+        font-size: 0.68rem;
     }}
     
     .card-authors {{
-        font-size: 0.7rem;
+        font-size: 0.68rem;
     }}
     
     .card-badges {{
@@ -374,8 +508,8 @@ st.markdown(f"""
     }}
     
     .badge {{
-        font-size: 0.6rem;
-        padding: 0.2rem 0.4rem;
+        font-size: 0.58rem;
+        padding: 0.2rem 0.45rem;
     }}
     
     .card-keywords {{
@@ -383,7 +517,7 @@ st.markdown(f"""
     }}
     
     .keyword {{
-        font-size: 0.58rem;
+        font-size: 0.56rem;
         padding: 0.15rem 0.4rem;
     }}
     
@@ -393,8 +527,8 @@ st.markdown(f"""
     }}
     
     .card-link {{
-        font-size: 0.68rem;
-        padding: 0.35rem 0.7rem;
+        font-size: 0.65rem;
+        padding: 0.35rem 0.65rem;
     }}
     
     .results-count {{
@@ -407,37 +541,216 @@ st.markdown(f"""
     }}
 }}
 
-@media (max-width: 480px) {{
+/* Medium phone (375px - 479px) */
+@media (max-width: 479px) and (min-width: 375px) {{
     .header-container {{
-        padding: 0.6rem 0.8rem;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.5rem 0.75rem;
+        gap: 0.2rem;
+        border-radius: 0.5rem;
     }}
     
     .header-title {{
-        font-size: 0.9rem;
+        font-size: 1.05rem;
     }}
     
     .header-subtitle {{
-        font-size: 0.7rem;
+        font-size: 0.68rem;
     }}
     
     .card {{
-        padding: 0.8rem;
+        padding: 0.75rem;
+        border-radius: 0.6rem;
     }}
     
     .card-title {{
-        font-size: 0.95rem;
+        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
     }}
     
     .card-stats {{
-        padding: 0.5rem 0;
+        padding: 0.45rem 0;
+        gap: 0.4rem;
     }}
     
     .stat {{
-        font-size: 0.65rem;
+        font-size: 0.62rem;
     }}
     
     .card-abstract {{
-        font-size: 0.78rem;
+        font-size: 0.75rem;
+        -webkit-line-clamp: 3;
+        margin-bottom: 0.5rem;
+    }}
+    
+    .card-meta {{
+        font-size: 0.65rem;
+        margin-bottom: 0.4rem;
+    }}
+    
+    .card-authors {{
+        font-size: 0.65rem;
+    }}
+    
+    .badge {{
+        font-size: 0.55rem;
+        padding: 0.18rem 0.4rem;
+    }}
+    
+    .keyword {{
+        font-size: 0.54rem;
+        padding: 0.12rem 0.35rem;
+    }}
+    
+    .card-link {{
+        font-size: 0.62rem;
+        padding: 0.3rem 0.55rem;
+    }}
+    
+    .results-count {{
+        font-size: 0.7rem;
+    }}
+    
+    .ingest-badge {{
+        font-size: 0.6rem;
+    }}
+}}
+
+/* Small phone (320px - 374px) */
+@media (max-width: 374px) and (min-width: 320px) {{
+    .header-container {{
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.4rem 0.6rem;
+        gap: 0.15rem;
+        border-radius: 0.4rem;
+    }}
+    
+    .header-title {{
+        font-size: 0.95rem;
+    }}
+    
+    .header-subtitle {{
+        font-size: 0.62rem;
+    }}
+    
+    .card {{
+        padding: 0.6rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.75rem;
+    }}
+    
+    .card-title {{
+        font-size: 0.85rem;
+        margin-bottom: 0.35rem;
+    }}
+    
+    .card-badges {{
+        gap: 0.2rem;
+        margin-bottom: 0.5rem;
+    }}
+    
+    .badge {{
+        font-size: 0.52rem;
+        padding: 0.15rem 0.35rem;
+    }}
+    
+    .card-stats {{
+        padding: 0.4rem 0;
+        gap: 0.35rem;
+    }}
+    
+    .stat {{
+        font-size: 0.58rem;
+    }}
+    
+    .card-abstract {{
+        font-size: 0.72rem;
+        -webkit-line-clamp: 2;
+        margin-bottom: 0.4rem;
+    }}
+    
+    .card-meta {{
+        font-size: 0.6rem;
+    }}
+    
+    .card-authors {{
+        font-size: 0.6rem;
+    }}
+    
+    .card-keywords {{
+        gap: 0.2rem;
+        margin-bottom: 0.5rem;
+    }}
+    
+    .keyword {{
+        font-size: 0.5rem;
+        padding: 0.1rem 0.3rem;
+    }}
+    
+    .card-links {{
+        gap: 0.3rem;
+    }}
+    
+    .card-link {{
+        font-size: 0.58rem;
+        padding: 0.25rem 0.5rem;
+    }}
+    
+    .results-count {{
+        font-size: 0.65rem;
+    }}
+    
+    .ingest-badge {{
+        font-size: 0.55rem;
+        padding: 0.25rem 0.5rem;
+    }}
+}}
+
+/* Extra small phone (<320px) */
+@media (max-width: 319px) {{
+    .header-container {{
+        padding: 0.35rem 0.5rem;
+        gap: 0.1rem;
+    }}
+    
+    .header-title {{
+        font-size: 0.85rem;
+    }}
+    
+    .header-subtitle {{
+        font-size: 0.58rem;
+    }}
+    
+    .card {{
+        padding: 0.5rem;
+    }}
+    
+    .card-title {{
+        font-size: 0.8rem;
+    }}
+    
+    .stat {{
+        font-size: 0.55rem;
+    }}
+    
+    .card-abstract {{
+        font-size: 0.68rem;
+        -webkit-line-clamp: 2;
+    }}
+    
+    .badge {{
+        font-size: 0.48rem;
+    }}
+    
+    .keyword {{
+        font-size: 0.48rem;
+    }}
+    
+    .card-link {{
+        font-size: 0.55rem;
+        padding: 0.2rem 0.4rem;
     }}
 }}
 
@@ -823,19 +1136,6 @@ if df.empty:
 
 # ---------- Sidebar ----------
 with st.sidebar:
-    st.markdown("### 🎨 Theme")
-    theme_toggle = st.toggle(
-        "Light Mode",
-        value=(st.session_state.theme == "light"),
-        help="Toggle between dark and light themes"
-    )
-    if theme_toggle and st.session_state.theme != "light":
-        st.session_state.theme = "light"
-        st.rerun()
-    elif not theme_toggle and st.session_state.theme != "dark":
-        st.session_state.theme = "dark"
-        st.rerun()
-
     st.markdown("---")
 
     # Display latest ingest time from parquet filename

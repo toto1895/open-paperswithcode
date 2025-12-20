@@ -299,6 +299,7 @@ st.markdown(f"""
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex-wrap: wrap;
 }}
 
 .header-title {{
@@ -316,6 +317,128 @@ st.markdown(f"""
     color: {theme['text_muted']};
     font-size: 0.85rem;
     margin: 0;
+}}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {{
+    .header-container {{
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.8rem 1rem;
+        gap: 0.3rem;
+    }}
+    
+    .header-title {{
+        font-size: 1.25rem;
+    }}
+    
+    .header-subtitle {{
+        font-size: 0.75rem;
+    }}
+    
+    .card {{
+        padding: 1rem;
+        min-height: auto;
+        border-radius: 0.75rem;
+    }}
+    
+    .card-title {{
+        font-size: 1rem;
+        -webkit-line-clamp: 3;
+    }}
+    
+    .card-stats {{
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }}
+    
+    .stat {{
+        font-size: 0.68rem;
+    }}
+    
+    .card-abstract {{
+        font-size: 0.8rem;
+        -webkit-line-clamp: 3;
+    }}
+    
+    .card-meta {{
+        font-size: 0.7rem;
+    }}
+    
+    .card-authors {{
+        font-size: 0.7rem;
+    }}
+    
+    .card-badges {{
+        gap: 0.3rem;
+    }}
+    
+    .badge {{
+        font-size: 0.6rem;
+        padding: 0.2rem 0.4rem;
+    }}
+    
+    .card-keywords {{
+        gap: 0.25rem;
+    }}
+    
+    .keyword {{
+        font-size: 0.58rem;
+        padding: 0.15rem 0.4rem;
+    }}
+    
+    .card-links {{
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }}
+    
+    .card-link {{
+        font-size: 0.68rem;
+        padding: 0.35rem 0.7rem;
+    }}
+    
+    .results-count {{
+        font-size: 0.75rem;
+    }}
+    
+    .ingest-badge {{
+        font-size: 0.65rem;
+        padding: 0.3rem 0.6rem;
+    }}
+}}
+
+@media (max-width: 480px) {{
+    .header-container {{
+        padding: 0.6rem 0.8rem;
+    }}
+    
+    .header-title {{
+        font-size: 1.1rem;
+    }}
+    
+    .header-subtitle {{
+        font-size: 0.7rem;
+    }}
+    
+    .card {{
+        padding: 0.8rem;
+    }}
+    
+    .card-title {{
+        font-size: 0.95rem;
+    }}
+    
+    .card-stats {{
+        padding: 0.5rem 0;
+    }}
+    
+    .stat {{
+        font-size: 0.65rem;
+    }}
+    
+    .card-abstract {{
+        font-size: 0.78rem;
+    }}
 }}
 
 .card {{
@@ -528,6 +651,154 @@ st.markdown(f"""
 /* Make columns fill width */
 [data-testid="column"] > div {{
     width: 100%;
+}}
+
+/* ========== RESPONSIVE DESIGN FOR MOBILE ========== */
+@media screen and (max-width: 768px) {{
+    .header-container {{
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.8rem 1rem;
+        gap: 0.3rem;
+    }}
+    
+    .header-title {{
+        font-size: 1.3rem;
+    }}
+    
+    .header-subtitle {{
+        font-size: 0.75rem;
+    }}
+    
+    .card {{
+        padding: 1rem;
+        min-height: auto;
+        border-radius: 0.75rem;
+    }}
+    
+    .card-title {{
+        font-size: 1rem;
+        -webkit-line-clamp: 3;
+    }}
+    
+    .card-stats {{
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+    }}
+    
+    .stat {{
+        font-size: 0.68rem;
+    }}
+    
+    .card-meta {{
+        font-size: 0.7rem;
+    }}
+    
+    .card-abstract {{
+        font-size: 0.8rem;
+        -webkit-line-clamp: 3;
+    }}
+    
+    .card-authors {{
+        font-size: 0.7rem;
+    }}
+    
+    .card-badges {{
+        gap: 0.3rem;
+    }}
+    
+    .badge {{
+        font-size: 0.58rem;
+        padding: 0.2rem 0.45rem;
+    }}
+    
+    .card-keywords {{
+        gap: 0.25rem;
+    }}
+    
+    .keyword {{
+        font-size: 0.55rem;
+        padding: 0.15rem 0.4rem;
+    }}
+    
+    .card-links {{
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }}
+    
+    .card-link {{
+        font-size: 0.65rem;
+        padding: 0.35rem 0.7rem;
+        flex: 1;
+        text-align: center;
+        min-width: 80px;
+    }}
+    
+    .results-count {{
+        font-size: 0.75rem;
+    }}
+    
+    .ingest-badge {{
+        font-size: 0.65rem;
+        padding: 0.3rem 0.6rem;
+    }}
+}}
+
+@media screen and (max-width: 480px) {{
+    .header-container {{
+        padding: 0.6rem 0.8rem;
+    }}
+    
+    .header-title {{
+        font-size: 1.1rem;
+    }}
+    
+    .header-subtitle {{
+        font-size: 0.7rem;
+    }}
+    
+    .card {{
+        padding: 0.8rem;
+        margin-bottom: 0.75rem;
+    }}
+    
+    .card-title {{
+        font-size: 0.95rem;
+    }}
+    
+    .card-stats {{
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }}
+    
+    .stat {{
+        font-size: 0.62rem;
+    }}
+    
+    .card-meta {{
+        font-size: 0.65rem;
+        line-height: 1.4;
+    }}
+    
+    .card-abstract {{
+        font-size: 0.75rem;
+        -webkit-line-clamp: 2;
+    }}
+    
+    .badge {{
+        font-size: 0.52rem;
+        padding: 0.15rem 0.35rem;
+    }}
+    
+    .keyword {{
+        font-size: 0.5rem;
+        padding: 0.12rem 0.3rem;
+    }}
+    
+    .card-link {{
+        font-size: 0.6rem;
+        padding: 0.3rem 0.5rem;
+    }}
 }}
 </style>
 """, unsafe_allow_html=True)

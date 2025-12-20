@@ -189,8 +189,9 @@ def filter_data(df: pd.DataFrame, search: str, language: str, sort_by: str, date
     return filtered.reset_index(drop=True)
 
 
-# ---------- Theme (forced to light) ----------
-st.session_state.theme = "light"
+# ---------- Theme Toggle ----------
+if "theme" not in st.session_state:
+    st.session_state.theme = "light"
 
 
 def get_theme_styles():
@@ -1136,6 +1137,19 @@ if df.empty:
 
 # ---------- Sidebar ----------
 with st.sidebar:
+    st.markdown("### 🎨 Theme")
+    theme_toggle = st.toggle(
+        "Dark Mode",
+        value=(st.session_state.theme == "dark"),
+        help="Toggle between light and dark themes"
+    )
+    if theme_toggle and st.session_state.theme != "dark":
+        st.session_state.theme = "dark"
+        st.rerun()
+    elif not theme_toggle and st.session_state.theme != "light":
+        st.session_state.theme = "light"
+        st.rerun()
+
     st.markdown("---")
 
     # Display latest ingest time from parquet filename

@@ -329,7 +329,7 @@ st.markdown(f"""
     }}
     
     .header-title {{
-        font-size: 1.25rem;
+        font-size: 1.1rem;
     }}
     
     .header-subtitle {{
@@ -413,7 +413,7 @@ st.markdown(f"""
     }}
     
     .header-title {{
-        font-size: 1.1rem;
+        font-size: 0.9rem;
     }}
     
     .header-subtitle {{

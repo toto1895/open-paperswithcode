@@ -7,3 +7,4 @@ google-cloud-parametermanager
 google-auth
 st-files-connection
 fastparquet
+gcsfs 

@@ -198,8 +198,8 @@ def get_theme_styles():
     """Return CSS styles based on current theme."""
     if st.session_state.theme == "dark":
         return {
-            "main_bg": "#000000",
-            "sidebar_bg": "#000000",
+            "main_bg": "#0e1117",
+            "sidebar_bg": "#0e1117",
             "sidebar_border": "rgba(56, 189, 248, 0.1)",
             "card_bg": "linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.7) 100%)",
             "card_border": "rgba(56, 189, 248, 0.12)",
@@ -233,11 +233,18 @@ def get_theme_styles():
             "license_bg": "rgba(34, 197, 94, 0.15)",
             "license_border": "rgba(34, 197, 94, 0.3)",
             "license_color": "#86efac",
+            # Additional Streamlit component colors for dark mode
+            "input_bg": "#1e1e1e",
+            "input_border": "#3d3d3d",
+            "input_text": "#fafafa",
+            "label_color": "#fafafa",
+            "widget_bg": "#262730",
+            "select_bg": "#1e1e1e",
         }
     else:
         return {
             "main_bg": "#ffffff",
-            "sidebar_bg": "#ffffff",
+            "sidebar_bg": "#f8f9fa",
             "sidebar_border": "rgba(59, 130, 246, 0.15)",
             "card_bg": "linear-gradient(145deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 0.95) 100%)",
             "card_border": "rgba(203, 213, 225, 0.6)",
@@ -271,26 +278,178 @@ def get_theme_styles():
             "license_bg": "rgba(22, 163, 74, 0.12)",
             "license_border": "rgba(22, 163, 74, 0.4)",
             "license_color": "#15803d",
+            # Additional Streamlit component colors for light mode
+            "input_bg": "#ffffff",
+            "input_border": "#e0e0e0",
+            "input_text": "#0f172a",
+            "label_color": "#0f172a",
+            "widget_bg": "#f0f2f6",
+            "select_bg": "#ffffff",
         }
 
 
 # ---------- Styles ----------
 theme = get_theme_styles()
 
+# Inject comprehensive CSS that overrides Streamlit's default theming
 st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;500;600;700&display=swap');
 
-.main {{ background: {theme['main_bg']} !important; }}
-.stApp {{ background: {theme['main_bg']} !important; }}
-[data-testid="stAppViewContainer"] {{ background: {theme['main_bg']} !important; }}
-[data-testid="stHeader"] {{ background: {theme['main_bg']} !important; }}
-
-[data-testid="stSidebar"] {{
-    background: {theme['sidebar_bg']} !important;
-    border-right: 1px solid {theme['sidebar_border']};
+/* ========== FORCE THEME OVERRIDE ========== */
+/* Override system/Streamlit theme completely */
+:root {{
+    color-scheme: {'dark' if st.session_state.theme == 'dark' else 'light'} !important;
 }}
-[data-testid="stSidebarContent"] {{ background: {theme['sidebar_bg']} !important; }}
+
+/* Main app background */
+.main,
+.stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stHeader"],
+[data-testid="stToolbar"],
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"],
+.block-container {{
+    background: {theme['main_bg']} !important;
+    background-color: {theme['main_bg']} !important;
+}}
+
+/* Sidebar styling */
+[data-testid="stSidebar"],
+[data-testid="stSidebar"] > div,
+[data-testid="stSidebarContent"],
+[data-testid="stSidebarUserContent"],
+section[data-testid="stSidebar"] {{
+    background: {theme['sidebar_bg']} !important;
+    background-color: {theme['sidebar_bg']} !important;
+    border-right: 1px solid {theme['sidebar_border']} !important;
+}}
+
+/* Text colors */
+.stApp, .stApp p, .stApp span, .stApp div,
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] span,
+.stMarkdown, .stMarkdown p {{
+    color: {theme['text_color']} !important;
+}}
+
+/* Headings */
+.stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
+[data-testid="stMarkdownContainer"] h1,
+[data-testid="stMarkdownContainer"] h2,
+[data-testid="stMarkdownContainer"] h3 {{
+    color: {theme['title_color']} !important;
+}}
+
+/* Input fields */
+.stTextInput > div > div > input,
+[data-testid="stTextInput"] input,
+.stTextInput input {{
+    background-color: {theme['input_bg']} !important;
+    color: {theme['input_text']} !important;
+    border-color: {theme['input_border']} !important;
+}}
+
+/* Select boxes */
+.stSelectbox > div > div,
+[data-testid="stSelectbox"] > div > div,
+.stSelectbox [data-baseweb="select"] > div {{
+    background-color: {theme['select_bg']} !important;
+    color: {theme['input_text']} !important;
+    border-color: {theme['input_border']} !important;
+}}
+
+.stSelectbox [data-baseweb="select"] span,
+[data-testid="stSelectbox"] span {{
+    color: {theme['input_text']} !important;
+}}
+
+/* Dropdown menu */
+[data-baseweb="popover"],
+[data-baseweb="menu"],
+[role="listbox"] {{
+    background-color: {theme['input_bg']} !important;
+}}
+
+[data-baseweb="menu"] li,
+[role="option"] {{
+    background-color: {theme['input_bg']} !important;
+    color: {theme['input_text']} !important;
+}}
+
+[data-baseweb="menu"] li:hover,
+[role="option"]:hover {{
+    background-color: {theme['widget_bg']} !important;
+}}
+
+/* Date input */
+.stDateInput > div > div > input,
+[data-testid="stDateInput"] input {{
+    background-color: {theme['input_bg']} !important;
+    color: {theme['input_text']} !important;
+    border-color: {theme['input_border']} !important;
+}}
+
+/* Number input */
+.stNumberInput > div > div > input,
+[data-testid="stNumberInput"] input {{
+    background-color: {theme['input_bg']} !important;
+    color: {theme['input_text']} !important;
+    border-color: {theme['input_border']} !important;
+}}
+
+/* Labels */
+.stTextInput label,
+.stSelectbox label,
+.stDateInput label,
+.stNumberInput label,
+[data-testid="stWidgetLabel"],
+.stWidgetLabel {{
+    color: {theme['label_color']} !important;
+}}
+
+/* Toggle/Switch */
+[data-testid="stToggle"] label span {{
+    color: {theme['label_color']} !important;
+}}
+
+/* Info/Warning/Error boxes */
+.stAlert {{
+    background-color: {theme['widget_bg']} !important;
+}}
+
+/* Expander */
+.streamlit-expanderHeader {{
+    background-color: {theme['widget_bg']} !important;
+    color: {theme['text_color']} !important;
+}}
+
+/* Metrics */
+[data-testid="stMetricValue"] {{
+    color: {theme['title_color']} !important;
+}}
+
+[data-testid="stMetricLabel"] {{
+    color: {theme['text_muted']} !important;
+}}
+
+/* Buttons */
+.stButton > button {{
+    background-color: {theme['widget_bg']} !important;
+    color: {theme['text_color']} !important;
+    border-color: {theme['input_border']} !important;
+}}
+
+/* Horizontal rule / divider */
+hr {{
+    border-color: {theme['input_border']} !important;
+}}
+
+/* Scrollbar styling for dark mode */
+{'* { scrollbar-color: #4a5568 #1a202c !important; }' if st.session_state.theme == 'dark' else ''}
+
+/* ========== CUSTOM COMPONENT STYLES ========== */
 
 .header-container {{
     background: {theme['header_bg']};
@@ -312,12 +471,13 @@ st.markdown(f"""
     background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin: 0;
 }}
 
 .header-subtitle {{
     font-family: 'Outfit', sans-serif;
-    color: {theme['text_muted']};
+    color: {theme['text_muted']} !important;
     font-size: 0.85rem;
     margin: 0;
 }}
@@ -798,26 +958,26 @@ st.markdown(f"""
 .badge-lang {{
     background: {theme['badge_lang_bg']};
     border: 1px solid {theme['badge_lang_border']};
-    color: {theme['badge_lang_color']};
+    color: {theme['badge_lang_color']} !important;
 }}
 
 .badge-cat {{
     background: {theme['badge_cat_bg']};
     border: 1px solid {theme['badge_cat_border']};
-    color: {theme['badge_cat_color']};
+    color: {theme['badge_cat_color']} !important;
 }}
 
 .badge-license {{
     background: {theme['license_bg']};
     border: 1px solid {theme['license_border']};
-    color: {theme['license_color']};
+    color: {theme['license_color']} !important;
 }}
 
 .card-title {{
     font-family: 'Outfit', sans-serif;
     font-size: 1.15rem;
     font-weight: 600;
-    color: {theme['title_color']};
+    color: {theme['title_color']} !important;
     line-height: 1.4;
     margin-bottom: 0.6rem;
     display: -webkit-box;
@@ -839,32 +999,32 @@ st.markdown(f"""
 .stat {{
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.72rem;
-    color: {theme['text_muted']};
+    color: {theme['text_muted']} !important;
     display: flex;
     align-items: center;
     gap: 0.3rem;
 }}
 
 .stat-value {{
-    color: {theme['stat_value']};
+    color: {theme['stat_value']} !important;
     font-weight: 600;
 }}
 
 .stat-highlight {{
-    color: #f59e0b;
+    color: #f59e0b !important;
 }}
 
 .card-meta {{
     font-family: 'Outfit', sans-serif;
     font-size: 0.78rem;
-    color: {theme['text_faint']};
+    color: {theme['text_faint']} !important;
     margin-bottom: 0.6rem;
 }}
 
 .card-abstract {{
     font-family: 'Outfit', sans-serif;
     font-size: 0.85rem;
-    color: {theme['text_color']};
+    color: {theme['text_color']} !important;
     line-height: 1.55;
     flex-grow: 1;
     display: -webkit-box;
@@ -877,7 +1037,7 @@ st.markdown(f"""
 .card-authors {{
     font-family: 'Outfit', sans-serif;
     font-size: 0.75rem;
-    color: {theme['text_faint']};
+    color: {theme['text_faint']} !important;
     margin-bottom: 0.6rem;
     display: -webkit-box;
     -webkit-line-clamp: 1;
@@ -899,7 +1059,7 @@ st.markdown(f"""
     border-radius: 4px;
     background: {theme['keyword_bg']};
     border: 1px solid {theme['keyword_border']};
-    color: {theme['keyword_color']};
+    color: {theme['keyword_color']} !important;
 }}
 
 .card-links {{
@@ -922,7 +1082,7 @@ st.markdown(f"""
 .link-paper {{
     background: {theme['link_paper_bg']};
     border: 1px solid {theme['link_paper_border']};
-    color: {theme['link_paper_color']};
+    color: {theme['link_paper_color']} !important;
 }}
 
 .link-paper:hover {{
@@ -932,7 +1092,7 @@ st.markdown(f"""
 .link-github {{
     background: {theme['link_github_bg']};
     border: 1px solid {theme['link_github_border']};
-    color: {theme['link_github_color']};
+    color: {theme['link_github_color']} !important;
 }}
 
 .link-github:hover {{
@@ -942,13 +1102,13 @@ st.markdown(f"""
 .results-count {{
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85rem;
-    color: {theme['text_faint']};
+    color: {theme['text_faint']} !important;
     padding: 0.5rem 0;
     margin-bottom: 1rem;
 }}
 
 .results-count span {{
-    color: #2563eb;
+    color: #2563eb !important;
     font-weight: 600;
 }}
 
@@ -959,7 +1119,7 @@ st.markdown(f"""
     border-radius: 8px;
     background: {theme['ingest_bg']};
     border: 1px solid {theme['ingest_border']};
-    color: {theme['ingest_color']};
+    color: {theme['ingest_color']} !important;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -1336,7 +1496,7 @@ with col2:
 
 # Footer pagination info
 st.markdown(f"""
-<p style="text-align: center; color: {theme['text_faint']}; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; margin-top: 2rem;">
+<p style="text-align: center; color: {theme['text_faint']} !important; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; margin-top: 2rem;">
     Page {page} of {total_pages} · Showing {start + 1}-{min(start + page_size, len(filtered))} of {len(filtered):,} papers
 </p>
 """, unsafe_allow_html=True)

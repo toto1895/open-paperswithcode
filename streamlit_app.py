@@ -198,8 +198,8 @@ def get_theme_styles():
     """Return CSS styles based on current theme."""
     if st.session_state.theme == "dark":
         return {
-            "main_bg": "linear-gradient(135deg, #0a0a0f 0%, #0d1117 50%, #0a0a0f 100%)",
-            "sidebar_bg": "rgba(13, 17, 23, 0.95)",
+            "main_bg": "#000000",
+            "sidebar_bg": "#000000",
             "sidebar_border": "rgba(56, 189, 248, 0.1)",
             "card_bg": "linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.7) 100%)",
             "card_border": "rgba(56, 189, 248, 0.12)",
@@ -236,8 +236,8 @@ def get_theme_styles():
         }
     else:
         return {
-            "main_bg": "linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%)",
-            "sidebar_bg": "rgba(255, 255, 255, 0.98)",
+            "main_bg": "#ffffff",
+            "sidebar_bg": "#ffffff",
             "sidebar_border": "rgba(59, 130, 246, 0.15)",
             "card_bg": "linear-gradient(145deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 0.95) 100%)",
             "card_border": "rgba(203, 213, 225, 0.6)",
@@ -281,13 +281,16 @@ st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;500;600;700&display=swap');
 
-.main {{ background: {theme['main_bg']}; }}
-.stApp {{ background: transparent; }}
+.main {{ background: {theme['main_bg']} !important; }}
+.stApp {{ background: {theme['main_bg']} !important; }}
+[data-testid="stAppViewContainer"] {{ background: {theme['main_bg']} !important; }}
+[data-testid="stHeader"] {{ background: {theme['main_bg']} !important; }}
 
 [data-testid="stSidebar"] {{
-    background: {theme['sidebar_bg']};
+    background: {theme['sidebar_bg']} !important;
     border-right: 1px solid {theme['sidebar_border']};
 }}
+[data-testid="stSidebarContent"] {{ background: {theme['sidebar_bg']} !important; }}
 
 .header-container {{
     background: {theme['header_bg']};

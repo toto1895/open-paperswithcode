@@ -1,18 +1,18 @@
 """
 Papers with Code - Streamlit Dashboard
 Optimized for performance with 1-hour cache, fast search, and rich card display.
+Uses st_files_connection for GCS access with Streamlit secrets.
 """
 
 import os
 import math
-import io
+import json
 from datetime import datetime, timedelta
 
 import pandas as pd
 import streamlit as st
-from google.cloud import storage
-
-os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", "bucket.json")
+from google.oauth2 import service_account
+from st_files_connection import FilesConnection
 
 st.set_page_config(
     page_title="Open papers with Code",
@@ -26,21 +26,59 @@ PREFIX = ""
 CACHE_TTL = 3600  # 1 hour in seconds
 
 
+def get_connection():
+    """Get the GCS connection instance using service account from secrets."""
+    # Parse service account JSON from secrets
+    service_account_json = st.secrets.secrets.service_account_json
+    service_account_info = json.loads(service_account_json)
+    credentials = service_account.Credentials.from_service_account_info(service_account_info)
+    
+    # Return connection with credentials
+    return st.connection('gcs', type=FilesConnection)
+
+
+def list_parquet_files() -> list[tuple[str, datetime]]:
+    """List parquet files in the bucket with their update times."""
+    conn = get_connection()
+    # Use the underlying fs to list files
+    fs = conn.fs
+    files = fs.ls(f"{BUCKET_NAME}/{PREFIX}")
+    
+    parquet_files = []
+    for f in files:
+        if f.endswith(".parquet"):
+            try:
+                info = fs.info(f)
+                updated = info.get('updated', info.get('timeCreated'))
+                if updated:
+                    if isinstance(updated, str):
+                        updated = pd.to_datetime(updated)
+                    parquet_files.append((f, updated))
+            except Exception:
+                pass
+    
+    return parquet_files
+
+
 @st.cache_data(ttl=CACHE_TTL, show_spinner="Loading papers...")
-def load_data() -> pd.DataFrame:
-    """Load latest parquet from GCS with 1-hour cache."""
-    client = storage.Client()
-    blobs = list(client.list_blobs(BUCKET_NAME, prefix=PREFIX))
-    candidates = [b for b in blobs if b.name.endswith(".parquet") and b.updated]
+def load_data() -> tuple[pd.DataFrame, str | None]:
+    """Load latest parquet from GCS with 1-hour cache. Returns (df, parquet_filename)."""
+    # List and find latest parquet file
+    parquet_files = list_parquet_files()
+    
+    if not parquet_files:
+        return pd.DataFrame(), None
 
-    if not candidates:
-        return pd.DataFrame()
-
-    latest = max(candidates, key=lambda b: b.updated)
-    df = pd.read_parquet(io.BytesIO(latest.download_as_bytes()))
+    # Sort by update time and get latest
+    latest_path, _ = max(parquet_files, key=lambda x: x[1])
+    parquet_filename = os.path.basename(latest_path)
+    
+    # Read parquet using connection
+    conn = get_connection()
+    df = conn.read(latest_path, input_format="parquet", ttl=CACHE_TTL)
 
     # Normalize dates once at load time
-    for col in ["created", "updated", "repo_updated_at", "repo_created_at", "ingest_time"]:
+    for col in ["created", "updated", "repo_updated_at", "repo_created_at"]:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col], errors="coerce", utc=True).dt.tz_localize(None)
 
@@ -70,7 +108,6 @@ def load_data() -> pd.DataFrame:
             if pd.isna(x):
                 return ""
         except (ValueError, TypeError):
-            # x might be an array or other non-scalar
             pass
         return str(x)
 
@@ -89,7 +126,26 @@ def load_data() -> pd.DataFrame:
         get_col_as_str("categories_full")
     )
 
-    return df
+    return df, parquet_filename
+
+
+def parse_ingest_time_from_filename(filename: str | None) -> str:
+    """Parse ingest time from parquet filename in format %Y%m%d%H.parquet."""
+    if not filename:
+        return "N/A"
+    
+    basename = os.path.basename(filename)
+    
+    if basename.endswith(".parquet"):
+        date_str = basename[:-8]
+    else:
+        return "N/A"
+    
+    try:
+        dt = datetime.strptime(date_str, "%Y%m%d%H")
+        return dt.strftime("%Y-%m-%d %H:%M UTC")
+    except ValueError:
+        return "N/A"
 
 
 def filter_data(df: pd.DataFrame, search: str, language: str, sort_by: str, date_range: tuple) -> pd.DataFrame:
@@ -174,41 +230,47 @@ def get_theme_styles():
             "ingest_bg": "rgba(34, 197, 94, 0.1)",
             "ingest_border": "rgba(34, 197, 94, 0.3)",
             "ingest_color": "#86efac",
+            "license_bg": "rgba(34, 197, 94, 0.15)",
+            "license_border": "rgba(34, 197, 94, 0.3)",
+            "license_color": "#86efac",
         }
-    else:  # light theme
+    else:
         return {
-            "main_bg": "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)",
-            "sidebar_bg": "rgba(248, 250, 252, 0.98)",
-            "sidebar_border": "rgba(100, 116, 139, 0.15)",
-            "card_bg": "linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)",
-            "card_border": "rgba(100, 116, 139, 0.15)",
-            "card_border_hover": "rgba(59, 130, 246, 0.5)",
-            "card_shadow": "0 20px 50px rgba(59, 130, 246, 0.12), 0 4px 20px rgba(0, 0, 0, 0.08)",
-            "title_color": "#1e293b",
-            "text_color": "#475569",
-            "text_muted": "#64748b",
-            "text_faint": "#94a3b8",
-            "stat_value": "#334155",
-            "header_bg": "linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)",
-            "header_border": "rgba(59, 130, 246, 0.2)",
-            "badge_lang_bg": "linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.08))",
-            "badge_lang_border": "rgba(59, 130, 246, 0.4)",
-            "badge_lang_color": "#2563eb",
-            "badge_cat_bg": "rgba(139, 92, 246, 0.12)",
-            "badge_cat_border": "rgba(139, 92, 246, 0.35)",
-            "badge_cat_color": "#7c3aed",
-            "keyword_bg": "rgba(245, 158, 11, 0.12)",
-            "keyword_border": "rgba(245, 158, 11, 0.35)",
+            "main_bg": "linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%)",
+            "sidebar_bg": "rgba(255, 255, 255, 0.98)",
+            "sidebar_border": "rgba(59, 130, 246, 0.15)",
+            "card_bg": "linear-gradient(145deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 0.95) 100%)",
+            "card_border": "rgba(203, 213, 225, 0.6)",
+            "card_border_hover": "rgba(59, 130, 246, 0.6)",
+            "card_shadow": "0 20px 50px rgba(59, 130, 246, 0.15), 0 8px 25px rgba(0, 0, 0, 0.1)",
+            "title_color": "#0f172a",
+            "text_color": "#334155",
+            "text_muted": "#475569",
+            "text_faint": "#64748b",
+            "stat_value": "#1e293b",
+            "header_bg": "linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)",
+            "header_border": "rgba(59, 130, 246, 0.25)",
+            "badge_lang_bg": "linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(59, 130, 246, 0.1))",
+            "badge_lang_border": "rgba(59, 130, 246, 0.5)",
+            "badge_lang_color": "#1d4ed8",
+            "badge_cat_bg": "rgba(139, 92, 246, 0.15)",
+            "badge_cat_border": "rgba(139, 92, 246, 0.45)",
+            "badge_cat_color": "#6d28d9",
+            "keyword_bg": "rgba(245, 158, 11, 0.15)",
+            "keyword_border": "rgba(245, 158, 11, 0.45)",
             "keyword_color": "#b45309",
-            "link_paper_bg": "linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(59, 130, 246, 0.06))",
-            "link_paper_border": "rgba(59, 130, 246, 0.35)",
-            "link_paper_color": "#2563eb",
-            "link_github_bg": "linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(139, 92, 246, 0.06))",
-            "link_github_border": "rgba(139, 92, 246, 0.35)",
-            "link_github_color": "#7c3aed",
-            "ingest_bg": "rgba(22, 163, 74, 0.1)",
-            "ingest_border": "rgba(22, 163, 74, 0.3)",
+            "link_paper_bg": "linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.08))",
+            "link_paper_border": "rgba(59, 130, 246, 0.45)",
+            "link_paper_color": "#1d4ed8",
+            "link_github_bg": "linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.08))",
+            "link_github_border": "rgba(139, 92, 246, 0.45)",
+            "link_github_color": "#6d28d9",
+            "ingest_bg": "rgba(22, 163, 74, 0.12)",
+            "ingest_border": "rgba(22, 163, 74, 0.4)",
             "ingest_color": "#15803d",
+            "license_bg": "rgba(22, 163, 74, 0.12)",
+            "license_border": "rgba(22, 163, 74, 0.4)",
+            "license_color": "#15803d",
         }
 
 
@@ -306,9 +368,9 @@ st.markdown(f"""
 }}
 
 .badge-license {{
-    background: rgba(34, 197, 94, 0.15);
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    color: #86efac;
+    background: {theme['license_bg']};
+    border: 1px solid {theme['license_border']};
+    color: {theme['license_color']};
 }}
 
 .card-title {{
@@ -330,8 +392,8 @@ st.markdown(f"""
     gap: 0.8rem;
     margin-bottom: 0.7rem;
     padding: 0.6rem 0;
-    border-top: 1px solid rgba(148, 163, 184, 0.1);
-    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    border-top: 1px solid {theme['card_border']};
+    border-bottom: 1px solid {theme['card_border']};
 }}
 
 .stat {{
@@ -349,7 +411,7 @@ st.markdown(f"""
 }}
 
 .stat-highlight {{
-    color: #fbbf24;
+    color: #f59e0b;
 }}
 
 .card-meta {{
@@ -446,7 +508,7 @@ st.markdown(f"""
 }}
 
 .results-count span {{
-    color: #38bdf8;
+    color: #2563eb;
     font-weight: 600;
 }}
 
@@ -481,7 +543,7 @@ st.markdown("""
 
 
 # ---------- Load Data ----------
-df = load_data()
+df, parquet_filename = load_data()
 
 if df.empty:
     st.error(f"No data found in gs://{BUCKET_NAME}/{PREFIX}")
@@ -505,15 +567,13 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # Display latest ingest_time
-    if "ingest_time" in df.columns and df["ingest_time"].notna().any():
-        latest_ingest = df["ingest_time"].max()
-        ingest_str = latest_ingest.strftime("%Y-%m-%d %H:%M UTC") if pd.notna(latest_ingest) else "N/A"
-        st.markdown(f"""
-        <div style="margin-bottom: 1rem;">
-            <span class="ingest-badge">🔄 Last Ingest: {ingest_str}</span>
-        </div>
-        """, unsafe_allow_html=True)
+    # Display latest ingest time from parquet filename
+    ingest_str = parse_ingest_time_from_filename(parquet_filename)
+    st.markdown(f"""
+    <div style="margin-bottom: 1rem;">
+        <span class="ingest-badge">🔄 Last Ingest: {ingest_str}</span>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("### 🔍 Search & Filter")
 
@@ -564,7 +624,6 @@ if filtered.empty:
 page_size = 48
 total_pages = max(1, math.ceil(len(filtered) / page_size))
 
-# Get page from session state or default to 1
 if "page" not in st.session_state:
     st.session_state.page = 1
 
@@ -593,7 +652,6 @@ def render_card(row):
     authors = safe(row.get("authors"))
     keywords = row.get("keywords")
 
-    # Use _effective_stars (precomputed: stars if available, else stars_total)
     stars = int(row.get("_effective_stars", 0) or 0)
     stars_7d = int(row.get("stars_last_7d", 0) or 0)
     stars_30d = int(row.get("stars_last_30d", 0) or 0)
@@ -613,7 +671,6 @@ def render_card(row):
     github_url = safe(row.get("github_link"))
     arxiv_id = safe(row.get("id"))
 
-    # Build badges
     badges = []
     if lang:
         badges.append(f'<span class="badge badge-lang">{lang}</span>')
@@ -621,15 +678,12 @@ def render_card(row):
         for cat in categories.split(",")[:2]:
             badges.append(f'<span class="badge badge-cat">{cat.strip()}</span>')
 
-
-    # Build links
     links = []
     if paper_url:
         links.append(f'<a href="{paper_url}" target="_blank" class="card-link link-paper">📄 Paper</a>')
     if github_url:
         links.append(f'<a href="{github_url}" target="_blank" class="card-link link-github">⚡ GitHub</a>')
 
-    # Build keywords html
     keywords_html = ""
     if keywords is not None:
         kw_list = []
@@ -637,7 +691,6 @@ def render_card(row):
             kw_list = [str(k) for k in keywords[:8]]
         else:
             try:
-                # Handle numpy arrays
                 if hasattr(keywords, '__iter__') and not isinstance(keywords, str):
                     kw_list = [str(k) for k in list(keywords)[:8]]
                 elif not pd.isna(keywords):
@@ -677,7 +730,7 @@ for i, (_, row) in enumerate(page_df.iterrows()):
         st.markdown(render_card(row), unsafe_allow_html=True)
 
 
-# ---------- Pagination Controls (below cards) ----------
+# ---------- Pagination Controls ----------
 st.markdown("<div style='height: 2rem'></div>", unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns([1, 2, 1])

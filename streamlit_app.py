@@ -191,7 +191,7 @@ def filter_data(df: pd.DataFrame, search: str, language: str, sort_by: str, date
 
 # ---------- Theme Toggle ----------
 if "theme" not in st.session_state:
-    st.session_state.theme = "dark"
+    st.session_state.theme = "light"
 
 
 def get_theme_styles():

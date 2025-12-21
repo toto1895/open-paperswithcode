@@ -59,28 +59,28 @@ def list_parquet_files() -> list[tuple[str, datetime]]:
     
     return parquet_files
 
-
-@st.cache_data(ttl=CACHE_TTL, show_spinner="Loading papers...")
-def load_data() -> tuple[pd.DataFrame, str | None]:
-    """Load latest parquet from GCS with 1-hour cache. Returns (df, parquet_filename)."""
+def get_latest_parquet_filename() -> str | None:
+    """Get the latest parquet filename by sorting filenames (which contain timestamps)."""
     conn = get_connection()
     fs = conn.fs
     files = fs.ls(f"{BUCKET_NAME}/{PREFIX}")
     
-    # Filter to parquet files and sort by filename (which contains timestamp)
+    # Filter to parquet files and sort by filename descending (newest first)
+    # Filename format: YYYYMMDDHH.parquet
     parquet_files = sorted(
         [f for f in files if f.endswith(".parquet")],
-        reverse=True  # Newest first since format is YYYYMMDDHH
+        key=lambda x: os.path.basename(x),
+        reverse=True
     )
     
-    if not parquet_files:
-        return pd.DataFrame(), None
+    return parquet_files[0] if parquet_files else None
 
-    latest_path = parquet_files[0]
-    parquet_filename = os.path.basename(latest_path)
-    
-    # Read parquet using connection
-    df = conn.read(latest_path, input_format="parquet", ttl=CACHE_TTL)
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner="Loading papers...")
+def load_parquet_file(filepath: str) -> pd.DataFrame:
+    """Load a specific parquet file from GCS."""
+    conn = get_connection()
+    df = conn.read(filepath, input_format="parquet", ttl=CACHE_TTL)
 
     # Normalize dates once at load time
     for col in ["created", "updated", "repo_updated_at", "repo_created_at"]:
@@ -92,7 +92,7 @@ def load_data() -> tuple[pd.DataFrame, str | None]:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
 
-    # Compute effective stars: use 'stars' if available and non-zero, else 'stars_total'
+    # Compute effective stars
     if "stars" in df.columns and "stars_total" in df.columns:
         df["_effective_stars"] = df["stars"].where(df["stars"] > 0, df["stars_total"])
     elif "stars" in df.columns:
@@ -102,9 +102,8 @@ def load_data() -> tuple[pd.DataFrame, str | None]:
     else:
         df["_effective_stars"] = 0
 
-    # Pre-compute lowercase search columns for fast filtering
+    # Pre-compute lowercase search columns
     def safe_join(x):
-        """Safely convert list/array/scalar to string."""
         if x is None:
             return ""
         if isinstance(x, (list, tuple)):
@@ -117,7 +116,6 @@ def load_data() -> tuple[pd.DataFrame, str | None]:
         return str(x)
 
     def get_col_as_str(col_name: str) -> pd.Series:
-        """Get column as lowercase string series."""
         if col_name not in df.columns:
             return pd.Series("", index=df.index)
         return df[col_name].apply(safe_join).str.lower()
@@ -131,6 +129,19 @@ def load_data() -> tuple[pd.DataFrame, str | None]:
         get_col_as_str("categories_full")
     )
 
+    return df
+
+
+def load_data() -> tuple[pd.DataFrame, str | None]:
+    """Load latest parquet from GCS. Returns (df, parquet_filename)."""
+    latest_path = get_latest_parquet_filename()
+    
+    if not latest_path:
+        return pd.DataFrame(), None
+    
+    parquet_filename = os.path.basename(latest_path)
+    df = load_parquet_file(latest_path)
+    
     return df, parquet_filename
 
 

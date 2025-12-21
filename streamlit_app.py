@@ -63,18 +63,23 @@ def list_parquet_files() -> list[tuple[str, datetime]]:
 @st.cache_data(ttl=CACHE_TTL, show_spinner="Loading papers...")
 def load_data() -> tuple[pd.DataFrame, str | None]:
     """Load latest parquet from GCS with 1-hour cache. Returns (df, parquet_filename)."""
-    # List and find latest parquet file
-    parquet_files = list_parquet_files()
+    conn = get_connection()
+    fs = conn.fs
+    files = fs.ls(f"{BUCKET_NAME}/{PREFIX}")
+    
+    # Filter to parquet files and sort by filename (which contains timestamp)
+    parquet_files = sorted(
+        [f for f in files if f.endswith(".parquet")],
+        reverse=True  # Newest first since format is YYYYMMDDHH
+    )
     
     if not parquet_files:
         return pd.DataFrame(), None
 
-    # Sort by update time and get latest
-    latest_path, _ = max(parquet_files, key=lambda x: x[1])
+    latest_path = parquet_files[0]
     parquet_filename = os.path.basename(latest_path)
     
     # Read parquet using connection
-    conn = get_connection()
     df = conn.read(latest_path, input_format="parquet", ttl=CACHE_TTL)
 
     # Normalize dates once at load time
@@ -132,7 +137,7 @@ def load_data() -> tuple[pd.DataFrame, str | None]:
 def parse_ingest_time_from_filename(filename: str | None) -> str:
     """Parse ingest time from parquet filename in format %Y%m%d%H.parquet."""
     if not filename:
-        return "N/A"
+        return "N/A" 
     
     basename = os.path.basename(filename)
     

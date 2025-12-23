@@ -1339,6 +1339,11 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
+    # Force reload button
+    if st.button("🔄 Reload Dataset", help="Clear cache and reload the latest data from GCS"):
+        load_parquet_file.clear()
+        st.rerun()
+
     st.markdown("### 🔍 Search & Filter")
 
     search = st.text_input(

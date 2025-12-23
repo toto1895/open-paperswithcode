@@ -1502,6 +1502,7 @@ for i, (_, row) in enumerate(page_df.iterrows()):
 # ---------- Pagination Controls ----------
 st.markdown("<div style='height: 2rem'></div>", unsafe_allow_html=True)
 
+
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     page = st.number_input(

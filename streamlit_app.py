@@ -1341,7 +1341,7 @@ with st.sidebar:
 
     # Force reload button
     if st.button("🔄 Reload Dataset", help="Clear cache and reload the latest data from GCS"):
-        load_parquet_file.clear()
+        st.cache_data.clear()
         st.rerun()
 
     st.markdown("### 🔍 Search & Filter")
